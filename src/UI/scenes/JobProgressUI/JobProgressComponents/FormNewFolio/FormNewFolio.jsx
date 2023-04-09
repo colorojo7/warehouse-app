@@ -1,38 +1,71 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { doc, getFirestore, setDoc } from "firebase/firestore";
+import { doc, getDoc, getFirestore, setDoc, updateDoc } from "firebase/firestore";
 import { useJobProgressContext } from "../../../../../context/Context";
 
 import Modal from "react-bootstrap/Modal";
 import Input from "../../../../../components/Input/Input";
 
 const FormNewFolio = () => {
-  const {job, jobFolios, formFolioShow, setFormFolioShow} = useJobProgressContext()
+
+  const {job, jobFolios, formFolioShow, setFormFolioShow, folioToUpdate} = useJobProgressContext()
+  
+  const [folioExist,setFolioExist] = useState(false)
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
-    defaultValues: {
-      folioSeq: jobFolios.length + 1
+    defaultValues: 
+    {
+      folioSeq: folioToUpdate ? folioToUpdate.folio.folioSeq : jobFolios.length + 1,
+      folioNumber: folioToUpdate ? folioToUpdate.folio.folioNumber : "",
+      folioManifest:folioToUpdate ? folioToUpdate.folio.folioManifest : "",
+      folioConsignee:folioToUpdate ? folioToUpdate.folio.folioConsignee : ""
     },
   });
-  const createFolio = (folioData) => {
+
+    const createFolio = async (folioData) => {
+      const db = getFirestore();
+      const docRef = doc(db, "folios", folioData.folioNumber);
     
-    const db = getFirestore();
-    setDoc(doc(db, "folios", folioData.folioNumber), {
-      ...folioData,
-      folioFromJob: job.id,
-      folioCreated: Date(),
-    })
-    .then(()=>{
-      jobFolios.push({...folioData, id: folioData.folioNumber});
-      setFormFolioShow(false);
-    })
-    .catch((err) => console.log(err));
-  };
+      try {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setFolioExist(folioData.folioNumber)
+          return;
+        }
+        await setDoc(docRef, {
+          ...folioData,
+          folioFromJob: job.id,
+          folioCreated: Date(),
+        }).then(()=>{
+          setFormFolioShow(false);
+        })
+      } catch (e) {
+        console.error("Error adding document: ", e);
+      }
+    };
+  
+    const updateFolio = async (folioData) => {
+      const db = getFirestore();
+      const docRef = doc(db, "folios", folioData.folioNumber);
+    
+      try {
+        
+    
+        await updateDoc(docRef, {
+          ...folioData,
+        })
+        .then(() => {
+          setFormFolioShow(false)
+        });
+      } catch (e) {
+        console.error("Error updating document: ", e);
+      }
+    };
 
   return (
     <Modal
@@ -41,10 +74,10 @@ const FormNewFolio = () => {
       onHide={() => setFormFolioShow(false)}
     >
       <Modal.Header closeButton>
-        <Modal.Title id="example-modal-sizes-title-sm">FOLIO FORM</Modal.Title>
+        <Modal.Title id="example-modal-sizes-title-sm">FOLIO</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <form onSubmit={handleSubmit(createFolio)} className="d-flex flex-wrap ">
+        <form onSubmit={folioToUpdate? handleSubmit(updateFolio) :handleSubmit(createFolio)} className="d-flex flex-wrap ">
           <Input
             label="Seq"
             type="number"
@@ -58,7 +91,9 @@ const FormNewFolio = () => {
             label="Folio Number"
             type="text"
             name="folioNumber"
-            className="col-8"
+            disabled={folioToUpdate? true: false}
+            className={`col-8`}
+            
             register={register}
             errors={errors}
             validations={[
@@ -118,11 +153,18 @@ const FormNewFolio = () => {
             errors={errors}
             validations={[]}
           />
+
+          {folioExist && <p className="w-100 fs-2 m-3 d-flex flex-wrap justify-content-center alert alert-danger" 
+            >Folio <strong className="mx-2"> {folioExist} </strong> already exist</p>}
+         
+         
           <input
             className="btn btn-primary w-100 m-3 fs-1"
             type="submit"
-            value="CREATE FOLIO"
+            value={folioToUpdate? "UPDATE FOLIO":"CREATE FOLIO"}
           />
+          
+          
         </form>
       </Modal.Body>
     </Modal>

@@ -1,5 +1,5 @@
 //Import REACT
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, HashRouter, Navigate, Route, Routes } from "react-router-dom";
 
 //Import COMPONENTS
 import BaseUI from "./UI/scenes/BaseUI/BaseUI";
@@ -19,7 +19,7 @@ import { JobProgressContextProvider } from "./context/Context";
 function App() {
   return (
     <JobProgressContextProvider>
-      <BrowserRouter>
+      <HashRouter>
         <div className="appContent">
           <NavHeader />
           <div className="">
@@ -34,7 +34,7 @@ function App() {
             </Routes>
           </div>
         </div>
-      </BrowserRouter>
+      </HashRouter>
     </JobProgressContextProvider>
   );
 }

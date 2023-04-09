@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ErrorMessage from '../ErrorMessage/ErrorMessage';
 
-const Input = ({ label, type, name, register, errors, validations, className  }) => {
+const Input = ({ label, type, name, register, errors, validations, className, disabled  }) => {
     
     const validationRules = validations.reduce((rules, validation) => {
     const { type, rule } = validation;
@@ -14,6 +14,7 @@ const Input = ({ label, type, name, register, errors, validations, className  })
       <input 
         id={name}
         className='form-control fs-1 fw-semiBold'
+        disabled={disabled}
         type={type} 
         placeholder={label}
         {...register(name, validationRules)}

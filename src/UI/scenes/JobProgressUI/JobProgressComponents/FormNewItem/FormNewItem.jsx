@@ -1,6 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import { doc, getFirestore, updateDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getFirestore, updateDoc } from "firebase/firestore";
 
 import { useJobProgressContext } from "../../../../../context/Context";
 
@@ -8,45 +8,49 @@ import Input from "../../../../../components/Input/Input";
 import Modal from "react-bootstrap/Modal";
 
 const FormNewItem = () => {
-  const { formItemShow, hideFormItem, jobFolios } = useJobProgressContext();
-
+  const { formItemShow, hideFormItem, jobFolios, itemToUpdate } = useJobProgressContext();
+  
   const folio = jobFolios.find((folio) => folio.id === formItemShow);
-  const newFolioItemIdx = folio?.folioItems?.length + 1;
 
+  console.log(itemToUpdate);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
     defaultValues: {
-      itemOutturn: 1,
+      itemOutturn: itemToUpdate? itemToUpdate.itemOutturn: 1,
+      itemType: itemToUpdate && itemToUpdate.itemType 
+
     },
   });
 
-
   const createItem = (itemData) => {
     const db = getFirestore();
-    const updatedFolioItems = folio?.folioItems
-      ? [
-          ...folio.folioItems,
-          {
-            ...itemData,
-            itemFromFolio: formItemShow,
-            id: `${folio.id}_${newFolioItemIdx.toString()}`,
-            idx: folio?.folioItems?.length
-          },
-        ]
-      : [{ ...itemData, itemFromFolio: formItemShow, id: `${folio.id}_1`, idx:0 }];
+    const folioRef = collection(db, `folios/${formItemShow}/items`)
 
-    updateDoc(doc(db, "folios", formItemShow), {
-      folioItems: updatedFolioItems,
-    }).then(() => {
-      folio.folioItems = updatedFolioItems;
-      hideFormItem();
-    });
+    const newItem = {
+      ...itemData,
+      itemFromFolio: formItemShow,
+      timeIdentified:new Date()
+    };
 
-    
+    addDoc(folioRef, newItem)
+      .then(() => {
+        hideFormItem();
+      });  
   };
+  
+  const updateItem = (itemData) => {
+    const db = getFirestore();
+    updateDoc(doc(db, "folios", folio.id, 'items', itemToUpdate.id ),
+    {...itemData})
+
+    .then(()=> hideFormItem())
+}
+    
+  
+
 
   return (
     <Modal size="sm" show={formItemShow} onHide={hideFormItem}>
@@ -56,7 +60,7 @@ const FormNewItem = () => {
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <form onSubmit={handleSubmit(createItem)} className="d-flex flex-wrap">
+        <form onSubmit={itemToUpdate? handleSubmit(updateItem):handleSubmit(createItem)} className="d-flex flex-wrap">
           <Input
             label="Outturn"
             type="number"
@@ -91,16 +95,18 @@ const FormNewItem = () => {
               className="form-select form-select-lg fs-1 fw-semiBold"
             >
               <option value="SKID">SKID</option>
-              <option value="CHEAP">CHEAP</option>
+              <option value="CHEP">CHEP</option>
               <option value="CRATE">CRATE</option>
-              <option value="ICB">ICB</option>
+              <option value="IBC">IBC</option>
+              <option value="LOSCOM">LOSCOM</option>
+              <option value="BOX">BOX</option>
               <option value="OTHER">OTHER</option>
             </select>
           </div>
           <input
             className="btn btn-primary w-100 m-3 fs-1"
             type="submit"
-            value="CREATE ITEM"
+            value={itemToUpdate? "EDIT ITEM" :"CREATE ITEM"}
           />
         </form>
       </Modal.Body>

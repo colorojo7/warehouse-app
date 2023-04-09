@@ -38,15 +38,14 @@ const FolioCardBody = ({folioItems}) => {
   const { itemsWithoutLocation, itemsByLocation } = groupItemsByLocation(folioItems);
 
 
-
-  if (!Array.isArray(folioItems)) {
-      return <p className='p-2'>NO ITEMS</p>; // or return a message to indicate the error
+  if (folioItems.length===0) {
+      return <p className='p-1 pb-0'>NO ITEMS</p>; // or return a message to indicate the error
     }
 
   return (
     
     <div className="card-body p-0 fs-5">
-        {itemsWithoutLocation.map( (item, idx) => <FolioCardLine key={idx} item={item} />)}
+        {itemsWithoutLocation.map( (item, idx) => <FolioCardLine key={idx} item={item} currentLocations={itemsByLocation}  />)}
         <FolioItemsGroup  locatedItems={itemsByLocation}/>
     </div>
   )

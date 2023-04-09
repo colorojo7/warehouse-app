@@ -7,9 +7,10 @@ import { doc, getFirestore, updateDoc } from 'firebase/firestore';
 
 const FormLocateItem = () => {
     const {formLocateShow, setFormLocateShow, jobFolios} = useJobProgressContext()
-    
-    const folio = jobFolios.find((folio) => folio.id === formLocateShow.substring(0, formLocateShow.indexOf("_")));
-    const item = folio.folioItems?.find((i)=> i.id===formLocateShow) 
+
+    const folio = jobFolios.find(function(elemento) {return elemento.id === formLocateShow.itemFromFolio});
+    const item = formLocateShow 
+    const currentLocation= item?.itemLocation
 
     const {
         register,
@@ -19,8 +20,11 @@ const FormLocateItem = () => {
         watch
       } = useForm({
         defaultValues: {
-          Main: 'WAREHOUSE',
-          Rack:''
+          Main: currentLocation? currentLocation.Main : 'WAREHOUSE',
+          Section:currentLocation? currentLocation.Section : ""  ,
+          RowDecen:currentLocation? currentLocation.RowDecen: "",
+          RowUnit:currentLocation? currentLocation.RowUnit: ""   ,       
+          Rack:currentLocation? currentLocation.Rack: ""
         },
       });
       
@@ -31,16 +35,10 @@ const FormLocateItem = () => {
         if (locationMain === "WAREHOUSE") {
                 whLocation =  `${watch('Section')}${watch('RowDecen')}${watch('RowUnit')}${watch('Rack')}`
         }
-        const updatedItem = {...item, itemLocation:{ ...location,  text: whLocation? whLocation : locationMain }}
-
-        const updatedFolioItems = [...folio.folioItems.filter(items=> items.idx !==item.idx) , updatedItem] 
-        
         const db = getFirestore();
-        updateDoc(doc(db, "folios", folio.id), {
-            folioItems: updatedFolioItems
-        }).then(()=>{
-            folio.folioItems = updatedFolioItems;
-            setFormLocateShow(false)})  
+        updateDoc(doc(db, "folios", folio.id, 'items', item.id ),
+            {itemLocation:{ ...location,  text: whLocation? whLocation : locationMain }})
+            .then(()=>setFormLocateShow(false))
         }
 
       useEffect(() => {
@@ -70,7 +68,7 @@ const FormLocateItem = () => {
               </Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <div className='d-flex border mb-1 align-items-center'>
+                <div className='d-flex border mb-1 align-items-center bg-colorGrey1 border p-1'>
                     <div className='col-5 fs-1 text-center'>{item.itemType}</div>
                     <div className='col-7 d-flex flex-wrap bg-colorFolio text-center fs-1'>
                         <div className='col-12'>{folio.id}</div>

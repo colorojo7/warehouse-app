@@ -14,7 +14,7 @@ const JobList = () => {
         const queryCollection = collection (db, 'jobs' )
       getDocs(queryCollection)
         .then( res  => setJobs( res.docs.map( job => ( {id : job.id , ...job.data() } ) ) )) 
-          .catch(err  =>  console.log(err)) 
+          .catch(err  =>  console.log("error", err)) 
   },[])
   
   return (

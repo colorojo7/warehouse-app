@@ -1,41 +1,89 @@
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+
+import {useNavigate } from "react-router-dom";
 import {
   getFirestore,
   setDoc,
   doc,
+  getDoc,
+  updateDoc,
 } from "firebase/firestore";
-import React from "react";
-import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+
+import { useJobProgressContext } from "../../../../context/Context";
+
 import Input from "../../../../components/Input/Input";
+import JobExistAlert from "../JobExistAlert/JobExistAlert";
 
 const JobFormUnpack = () => {
+  const [jobExist, setJobExist ]= useState(false)
+  const {jobToUpdate} = useJobProgressContext()
+  jobToUpdate && console.log("jobToUpdate",jobToUpdate);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
     defaultValues: {
-      jobTotalFolios: 1,
-      jobManifest: 1,
+      jobNumber:jobToUpdate? jobToUpdate.id :"",
+      jobClient:jobToUpdate? jobToUpdate.jobClient :"",
+      jobContainerNumber:jobToUpdate? jobToUpdate.jobContainerNumber :"",
+      jobContainerISO:jobToUpdate? jobToUpdate.jobContainerISO :"",
+      jobCuttedSeal:jobToUpdate? jobToUpdate.jobCuttedSeal :"",
+      jobTotalFolios: jobToUpdate? jobToUpdate.jobTotalFolios : 1,
+      jobManifest: jobToUpdate? jobToUpdate.jobManifest: 1,
     }
   });
 
   const navigate = useNavigate();
   
-  const onSubmit = (data) => {
+
+  const onSubmit = async (data) => {
     const db = getFirestore();
-    setDoc(doc(db, "jobs", data.jobNumber), 
-              { ...data, jobStart: Date() })
-            .then(navigate(`/jobProgress/${data.jobNumber}`)
-    );
+    const docRef = doc(db, "jobs", data.jobNumber);
+    
+    try {
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setJobExist(data.jobNumber)
+        //alert("A document with the same ID already exists");
+        return;
+      }
+      
+      await setDoc(docRef, { ...data, jobStart: Date() });
+      navigate(`/jobProgress/${data.jobNumber}`);
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
   };
 
+  const onEdit = async (editedData) => {
+
+    const db = getFirestore();
+    const docRef = doc(db, "jobs", editedData.jobNumber);
+  
+    try {
+      await updateDoc(docRef, {
+        ...editedData,
+      })
+      .then(() => {
+        navigate(`/jobProgress/${editedData.jobNumber}`);
+      });
+    } catch (e) {
+      console.error("Error updating document: ", e);
+    }
+  }
+
+
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={jobToUpdate? handleSubmit(onEdit) : handleSubmit(onSubmit) }>
       <Input
         label="JOB NUMBER"
         type="text"
         name="jobNumber"
+        disabled={jobToUpdate? true: false}
         register={register}
         errors={errors}
         validations={[
@@ -174,7 +222,8 @@ const JobFormUnpack = () => {
         ]}
       />
       <div className="p-3">
-        <input className="btn btn-primary w-100" type="submit" value="START" />
+        {jobExist && <JobExistAlert jobNumber={jobExist}/>  }
+        <input className="btn btn-primary w-100" type="submit" value={jobToUpdate? "EDIT" : "START"} />
       </div>
     </form>
   );

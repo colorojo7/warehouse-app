@@ -1,8 +1,19 @@
 import React from "react";
 import { useJobProgressContext } from "../../../context/Context";
 
-const FolioCardHeader = ({folio}) => {
-  const {showFormItem, totalFolioOutturn} = useJobProgressContext()
+const FolioCardHeader = ({folio, items}) => {
+  const {showFormItem, setAlertDeleteDoc, setFormFolioShow, setFolioToUpdate, setItemToUpdate} = useJobProgressContext()
+
+  function totalFolioOutturn() {
+    return items?.reduce((accumulator, currentValue) => {
+      return accumulator + currentValue.itemOutturn;
+    }, 0);
+  }
+
+  const openFolioFormWithFolioToUpdate = ()=> {
+      setFormFolioShow(true)
+      setFolioToUpdate({folio})}
+
   
   return (
     <h4 className="card-header bg-colorFolio d-flex flex-wrap p-2">
@@ -10,37 +21,43 @@ const FolioCardHeader = ({folio}) => {
         <b className="col-12 fw-semiBold fs-1">{folio.folioNumber}</b>
         <div className="fw-light fs-5">{folio.folioConsignee}</div>
       </div>
-      <div className="col-2 d-flex flex-column  align-items-center">
+      <div className="col-2 d-flex flex-column  align-items-center justify-content-between">
         <div className="">
-            <button onClick={()=>showFormItem(folio.id)} className="btn btn-primary p-1">
+            <button 
+                onClick={()=>{
+                    showFormItem(folio.id) 
+                    setItemToUpdate()}} 
+                className="btn btn-primary p-1">
                 <img src="/icons/iconNewItem.svg"/>
             </button>
         </div>
-        <div className="mt-1">{folio?.folioItems?.length}</div>
+        <div className="mt-1 fs-2 fw-semiBold">{items?.length}</div>
       </div>
-      <div className="col-4 d-flex flex-column align-items-end">
+      <div className="col-4 d-flex flex-column align-items-end justify-content-between">
         <div
-          className="col-1 d-block link-dark text-decoration-none dropdown-toggle text-primary fs-1"
+          className="btn btn-primary bg-colorGrey1 d-block    fs-1  p-auto h-50"
           href="#"
           data-bs-toggle="dropdown"
           aria-expanded="false"
-        ></div>
+        >
+           <img src="/icons/iconOptions.svg"  />
+        </div>
         <ul className="dropdown-menu text-small shadow">
           <li>
-            <div className="dropdown-item" href="#">
+            <div onClick={openFolioFormWithFolioToUpdate} className="dropdown-item" href="#">
               Edit folio details
             </div>
           </li>
-          <li>
+          {/* <li>
             <div className="dropdown-item" href="#">
               See details
             </div>
-          </li>
+          </li> */}
           <li>
             <hr className="dropdown-divider" />
           </li>
           <li>
-            <div className="dropdown-item" href="#">
+            <div className="dropdown-item" onClick={()=>setAlertDeleteDoc( {collection:"folios" , folio} )}>
               Delete folio
             </div>
           </li>

@@ -1,9 +1,9 @@
 import React from "react";
 import { useJobProgressContext } from "../../../../context/Context";
 
-const FolioCardLine = ({ item }) => {
-  const {setFormLocateShow}=useJobProgressContext()
-  
+const FolioCardLine = ({ item, currentLocations=undefined }) => {
+  const {setFormLocateShow, setFormItemShow, setItemToUpdate}=useJobProgressContext()
+
   return (
     <>
       <div className="d-flex justify-content-between m-1">
@@ -15,19 +15,23 @@ const FolioCardLine = ({ item }) => {
             <img src="/icons/iconOptions.svg" />
           </button>
         </div>
-        <div className="col-3">
+        <div className="col-4 my-auto" onClick={()=> setFormLocateShow(item)}>
           {item.itemLocation ? 
             (item.itemLocation.text) 
             : 
-            ( <button onClick={()=> setFormLocateShow(item.id)} className="btn btn-primary">
+            ( <button  className="btn btn-primary">
                 <img src="/icons/iconLocation.svg" />
               </button>
             )
           }
         </div>
-        <div className="col-3 my-auto">{item.itemType}</div>
-        <div className="col-2"></div>
-        <div className="col-2 text-end"> {item.itemOutturn}</div>
+        <div className="col-3 my-auto" onClick={()=>{
+            setFormItemShow(item.itemFromFolio) 
+            setItemToUpdate(item)}
+            }
+            >{item.itemType}</div>
+        <div className="col-1"></div>
+        <div className="col-2 text-end my-auto"> {item.itemOutturn}</div>
       </div>
       <hr className="m-1" />
     </>

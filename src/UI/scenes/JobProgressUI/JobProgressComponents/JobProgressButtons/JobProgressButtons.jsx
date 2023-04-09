@@ -2,9 +2,13 @@ import React from 'react'
 import { useJobProgressContext } from '../../../../../context/Context'
 
 const JobProgressButtons = () => {
-  const { setFormFolioShow, setFormDamageShow} =useJobProgressContext()
-  const showFormFolio = () => {setFormFolioShow(true)}
+  const { setFormFolioShow, setFormDamageShow, setFolioToUpdate} =useJobProgressContext()
+  const showFormFolio = () => {
+    setFormFolioShow(true)
+    setFolioToUpdate(undefined)
+  }
   const showFormDamage = () => {setFormDamageShow(true)}
+
 
   return (
     <div className='sticky-bottom bottom-0 w-100  bg-colorWhite p-2 d-flex justify-content-evenly'>

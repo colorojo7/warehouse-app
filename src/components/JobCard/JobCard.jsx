@@ -1,5 +1,6 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useJobProgressContext } from "../../context/Context";
 import { formatDate } from "../../helpers/utils/formatDate";
 
 const DataDispleyer = ({ field, data, className }) => {
@@ -14,6 +15,8 @@ const DataDispleyer = ({ field, data, className }) => {
 };
 
 const JobCard = ({ job }) => {
+  const {setAlertDeleteDoc, setJobToUpdate} = useJobProgressContext()
+  const navigate = useNavigate()
   return (
     <div id={job.id} className="card flex-grow-1 my-3 mx-2 p-0 shadow">
       <h4 className="card-header bg-colorJob d-flex flex-wrap p-2">
@@ -51,14 +54,18 @@ const JobCard = ({ job }) => {
           ></div>
           <ul className="dropdown-menu text-small shadow">
             <li>
-              <div className="dropdown-item" href="#">
+              <div className="dropdown-item" onClick={()=>
+                  {setJobToUpdate(job)
+                    navigate('/JobForm/')
+                  }
+                } >
                 Edit job details
               </div>
             </li>
             <li>
-              <div className="dropdown-item" href="#">
+              {/* <div className="dropdown-item" href="#">
                 See details
-              </div>
+              </div> */}
               <Link
                 to={`/jobProgress/${job.id}`}
                 className="dropdown-item"
@@ -71,7 +78,7 @@ const JobCard = ({ job }) => {
               <hr className="dropdown-divider" />
             </li>
             <li>
-              <div className="dropdown-item" href="#">
+              <div className="dropdown-item" href="#" onClick={()=>setAlertDeleteDoc( {collection:"jobs" , job })}>
                 Delete job
               </div>
             </li>
